@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sports AI Selection System</title>
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: white;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 40px;
+    background: rgba(0,0,0,0.5);
+}
+
+.navbar h1 {
+    color: #00ffcc;
+}
+
+/* Hero */
+.hero {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.hero h2 {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #ccc;
+}
+
+/* Card */
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    margin: 20px auto;
+    width: 350px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 0px 20px rgba(0,255,200,0.3);
+}
+
+/* Inputs */
+input, select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+}
+
+/* Button */
+button {
+    background: #00ffcc;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #00ccaa;
+}
+
+/* Result */
+.result {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+    background: rgba(0,0,0,0.5);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <h1>⚽ Sports AI</h1>
+    <div>Player Selection System</div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+    <h2>AI Powered Player Selection</h2>
+    <p>Predict whether a player will be selected for the next match</p>
+</div>
+
+<!-- Prediction Card -->
+<div class="card">
+    <h3>🔍 Predict Player</h3>
+    <input type="text" id="playerName" placeholder="Enter Player Name">
+    <select id="sport">
+        <option>Cricket</option>
+        <option>Football</option>
+        <option>Rugby</option>
+        <option>Golf</option>
+        <option>Baseball</option>
+        <option>Badminton</option>
+        <option>Volleyball</option>
+        <option>Table Tennis</option>
+    </select>
+    <button onclick="predictPlayer()">Predict</button>
+    <div class="result" id="result"></div>
+</div>
+
+<!-- Compare Players -->
+<div class="card">
+    <h3>⚔️ Compare Players</h3>
+    <input type="text" id="p1" placeholder="Player 1">
+    <input type="text" id="p2" placeholder="Player 2">
+    <button onclick="comparePlayers()">Compare</button>
+    <div class="result" id="compareResult"></div>
+</div>
+
+<!-- PLAYER DASHBOARD -->
+<div class="card">
+    <h3>📊 Player Dashboard</h3>
+    <input type="text" id="dashboardPlayer" placeholder="Enter Player Name">
+    <button onclick="loadDashboard()">
+        Load Dashboard
+    </button>
+    <div id="dashboardResult" style="margin-top:20px;"></div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    © 2026 Sports AI Project | Built by Minhas Shakeel
+</div>
+
+
+<script>
+// predictPlayer
+function predictPlayer() {
+    let name = document.getElementById("playerName").value.trim().toLowerCase();
+fetch(`http://127.0.0.1:5000/predict?name=${encodeURIComponent(name)}`)    .then(data => {
+        
+        if(data.status === "success") {
+
+            document.getElementById("result").innerHTML =
+                "✅ " + data.prediction;
+
+        } else {
+            document.getElementById("result").innerHTML =
+                "❌ " + data.message;
+        }
+    })
+
+    .catch(error => {
+        console.log(error);
+        document.getElementById("result").innerHTML =
+            "❌ Server Error";
+    });
+}
+
+
+// comparePlayers
+
+function comparePlayers() {
+    let p1 = document.getElementById("p1").value.trim().toLowerCase();
+    let p2 = document.getElementById("p2").value.trim().toLowerCase();
+    fetch(`http://127.0.0.1:5000/compare?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}`)
+
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if(data.status === "success") {
+            document.getElementById("compareResult").innerHTML =
+                "🏆 Better Player: " + data.winner;
+
+        } else {
+            document.getElementById("compareResult").innerHTML =
+                "❌ " + data.message;
+        }
+    })
+
+    .catch(error => {
+        console.log(error);
+        document.getElementById("compareResult").innerHTML =
+            "❌ Server Error";
+    });
+}
+
+
+// Player DashBoard
+function loadDashboard() {
+
+    let player = document
+        .getElementById("dashboardPlayer")
+        .value
+        .trim()
+        .toLowerCase();
+
+    fetch(`http://127.0.0.1:5000/dashboard?player=${player}`)
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        console.log(data);
+
+        if(data.status !== "success") {
+
+            document.getElementById("dashboardResult").innerHTML =
+                "❌ " + data.message;
+
+            return;
+        }
+
+        document.getElementById("dashboardResult").innerHTML = `
+
+            <h2>${data.player}</h2>
+
+            <p>🏅 Prediction: ${data.prediction}</p>
+
+            <p>⚡ Performance Score: ${data.performance_score}</p>
+
+            <canvas id="playerChart"></canvas>
+
+        `;
+
+        const ctx = document
+            .getElementById('playerChart');
+
+        new Chart(ctx, {
+
+            type: 'bar',
+
+            data: {
+
+                labels: [
+                    'Offensive',
+                    'Defensive',
+                    'Efficiency',
+                    'Aggression'
+                ],
+
+                datasets: [{
+
+                    label: 'Player Stats',
+
+                    data: [
+                        data.offensive_skill,
+                        data.defensive_skill,
+                        data.efficiency,
+                        data.aggression
+                    ]
+
+                }]
+            }
+
+        });
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
+
+        document.getElementById("dashboardResult").innerHTML =
+            "❌ Server Error";
+    });
+}
+</script>
+
+<!-- 
+<script>
+
+function predictPlayer() {
+
+    let name = document.getElementById("playerName").value.trim();
+
+    fetch(`http://127.0.0.1:5000/predict?name=${encodeURIComponent(name)}`)
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log(data);
+
+        if (data.status === "success") {
+
+            document.getElementById("result").innerHTML =
+                "✅ Prediction: " + data.prediction;
+
+        } else {
+
+            document.getElementById("result").innerHTML =
+                "❌ " + data.message;
+        }
+
+    })
+
+    .catch(error => {
+
+        console.log("FETCH ERROR:", error);
+
+        document.getElementById("result").innerHTML =
+            "❌ Server Error";
+    });
+} -->
+
+</script>
+</body>
+</html>
